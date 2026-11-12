@@ -77,25 +77,6 @@
     return scored.sort((a, b) => a.k - b.k).slice(0, n).map((x) => x.id);
   }
 
-  /* ---------- Claude (correzione delle risposte aperte) ---------- */
-  let sampleFn = null;
-  const sampleReady = (async () => {
-    if (!window.claude || !window.claude.use) return null;
-    try { sampleFn = await window.claude.use("sample"); } catch (e) { sampleFn = null; }
-    document.querySelectorAll("[data-claude]").forEach((b) => { b.hidden = !sampleFn; });
-    return sampleFn;
-  })();
-  const SAMPLE_ERR = {
-    not_granted: "Correzione con Claude non autorizzata in questa pagina. Usa l'autovalutazione con la traccia.",
-    sampling_disabled: "Claude non è disponibile per questo account. Usa l'autovalutazione con la traccia.",
-    rate_limited: "Troppe richieste in poco tempo. Riprova tra qualche minuto.",
-    session_expired: "La sessione è scaduta: accedi di nuovo a Claude e riprova.",
-    invalid_json: "La correzione non è arrivata nel formato atteso. Riprova.",
-    refused: "Claude non ha valutato questa risposta. Prova a riformularla.",
-    prompt_too_large: "La risposta è troppo lunga: accorciala.",
-    empty_completion: "Nessuna correzione ricevuta. Riprova."
-  };
-
   /* ---------- Navigazione ---------- */
   const NAV = [["", "Home"], ["teoria", "Teoria"], ["reti", "Reti"], ["sicurezza", "Sicurezza"], ["esercizi", "Esercizi"], ["ripasso", "Ripasso"], ["esame", "Esame"], ["metodo", "Metodo"]];
   function drawNav(cur) {
@@ -135,6 +116,59 @@
   const progBar = (x, label) => `<div class="prog"><span>${label ?? pct(x) + "%"}</span><div class="track"><i style="width:${pct(x)}%"></i></div></div>`;
   const metaRow = (items) => `<div class="meta">${items.map(([k, v]) => `<div><div class="k">${k}</div><div class="v">${v}</div></div>`).join("")}</div>`;
 
+  /* ---------- Stima della preparazione ----------
+     Modello: probabilità di rispondere giusto a ogni domanda chiusa (dal livello nel ripasso),
+     di risolvere ogni esercizio d'esame (dai tentativi) e voto atteso delle aperte (dall'autovalutazione).
+     Il peso di ogni elemento segue il formato della simulazione: 12 chiuse di reti e 6 di sicurezza (metà tipo esame),
+     un esercizio CIDR + 3 esercizi di reti, una aperta sul firewall + una su un'altra lezione di sicurezza. */
+  const P_UNSEEN = 0.3, P_LVL = [0, 0.65, 0.8, 0.92], TARGET = 0.95;
+  const pQ = (id) => { const p = qs(id); if (!p.s) return P_UNSEEN; return p.b ? P_LVL[p.b] : 0.25 + 0.2 * (p.c / p.s); };
+  const pEx = (k) => { const s = P.ex[k]; return s && s.t ? Math.min(0.92, (s.ok + 0.2) / (s.t + 1)) : 0.2; };
+  const pOpen = (o) => (P.open[o.id] ? P.open[o.id].v / 3 : 0.3);
+  const avg = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
+  function readiness() {
+    const items = []; // { mod, kind, w (punti in palio), p (prob. stimata), seen }
+    [["reti", 12], ["sicurezza", 6]].forEach(([ak, n]) => {
+      const pool = areaQ(ak), ex = pool.filter((id) => Q[id].exam), rest = pool.filter((id) => !Q[id].exam);
+      const groups = ex.length && rest.length ? [[ex, n / 2], [rest, n / 2]] : [[pool, n]];
+      groups.forEach(([ids, pts]) => ids.forEach((id) => items.push({ mod: Q[id].mod, kind: "q", w: pts / ids.length, p: pQ(id), seen: qs(id).s > 0 })));
+    });
+    const exPool = Object.values(EX).filter((e) => e.exam && e.mod.startsWith("r") && e.id !== "cidr8").map((e) => e.id);
+    if (EX.cidr8) items.push({ mod: EX.cidr8.mod, kind: "e", w: 2, p: pEx("cidr8"), seen: !!(P.ex.cidr8 && P.ex.cidr8.t) });
+    exPool.forEach((k) => items.push({ mod: EX[k].mod, kind: "e", w: 6 / exPool.length, p: pEx(k), seen: !!(P.ex[k] && P.ex[k].t) }));
+    const opS = Object.values(OPENS).filter((o) => o.area === "sicurezza"), fw = opS.filter((o) => o.mod === "s8"), oth = opS.filter((o) => o.mod !== "s8");
+    [[fw, 3], [oth, 3]].forEach(([os, pts]) => os.forEach((o) => items.push({ mod: o.mod, kind: "o", w: pts / os.length, p: pOpen(o), seen: !!P.open[o.id] })));
+    const part = (k) => items.filter((x) => x.kind === k).reduce((a, x) => a + x.w * x.p, 0);
+    const parts = { q: part("q"), e: part("e"), o: part("o") };
+    const total = parts.q + parts.e + parts.o;
+    const coverage = items.reduce((a, x) => a + (x.seen ? x.w : 0), 0) / 32;
+    const gains = {};
+    items.forEach((x) => { const g = x.w * Math.max(0, TARGET - x.p); const m = (gains[x.mod] = gains[x.mod] || { q: 0, e: 0, o: 0 }); m[x.kind] += g; });
+    const top = Object.entries(gains).map(([id, g]) => ({ m: MODS[id], g, tot: g.q + g.e + g.o })).filter((x) => x.m && x.tot >= 0.05).sort((a, b) => b.tot - a.tot).slice(0, 4);
+    return { total, parts, coverage, top };
+  }
+  function readinessHtml() {
+    const r = readiness(), PASS = 18;
+    const ex = (P.exams || []).filter((e) => e.total != null).slice(-1)[0];
+    const conf = r.coverage < 0.25 ? "bassa: hai visto ancora poco materiale, la stima si basa soprattutto su valori di partenza" : r.coverage < 0.6 ? "media: diventa più precisa man mano che fai quiz, esercizi e aperte" : "buona: si basa su gran parte del materiale d'esame";
+    const why = (g) => [["q", "quiz"], ["e", "esercizi"], ["o", "aperte"]].filter(([k]) => g[k] >= 0.05).sort((a, b) => g[b[0]] - g[a[0]]).map(([k, l]) => `${l} +${fmtP(Math.round(g[k] * 10) / 10)}`).join(" · ");
+    return `
+      <section>
+        <h2 class="h2">Preparazione</h2>
+        <div class="ready">
+          <div class="score-big"><span>${fmtP(Math.round(r.total * 2) / 2)}</span><span class="muted" style="font-size:.4em;letter-spacing:-0.03em"> / 32</span></div>
+          <p class="body-text">Punteggio stimato se l'esame fosse oggi, calcolato dai tuoi risultati su quiz, esercizi e domande aperte. ${r.total >= PASS ? "Sei sopra la sufficienza: punta a renderla stabile." : `Ti mancano circa <b>${fmtP(Math.round((PASS - r.total) * 2) / 2)} punti</b> per la sufficienza.`}</p>
+          <div class="ready-bar" role="img" aria-label="Stima ${fmtP(Math.round(r.total * 2) / 2)} su 32, sufficienza a ${PASS}"><i style="width:${Math.min(100, (r.total / 32) * 100)}%"></i><span class="pass" style="left:${(PASS / 32) * 100}%"></span></div>
+          <div class="ready-scale"><span>0</span><span style="position:absolute;left:${(PASS / 32) * 100}%;transform:translateX(-50%)">${PASS}</span><span>32</span></div>
+        </div>
+        ${metaRow([["Domande chiuse", `${fmtP(Math.round(r.parts.q * 10) / 10)} / 18`], ["Esercizi", `${fmtP(Math.round(r.parts.e * 10) / 10)} / 8`], ["Aperte", `${fmtP(Math.round(r.parts.o * 10) / 10)} / 6`]])}
+        <p class="note" style="margin-top:12px">Affidabilità ${conf}.${ex ? ` Ultima simulazione completa: ${fmtP(ex.total)}/32.` : ""}</p>
+        ${r.top.length ? `<h3 class="h3" style="margin-top:28px">Dove guadagni più punti</h3>
+        <div class="mods">${r.top.map(({ m, g, tot }) => `<a class="mod-row" href="#m-${m.id}"><span class="n">${m.area === "reti" ? "R" : "S"}${m.n}</span><span><span class="t">${esc(m.title)}</span><br><span class="s">${why(g)}</span></span><span class="prog"><span class="gain">+${fmtP(Math.round(tot * 10) / 10)} pt</span></span><span class="arr">→</span></a>`).join("")}</div>
+        <p class="note" style="margin-top:10px">Punti in più che otterresti portando il modulo a padronanza piena, pesati su quanto conta all'esame.</p>` : ""}
+      </section>`;
+  }
+
   /* ---------- Home ---------- */
   function renderHome() {
     const due = dueIds().length;
@@ -147,7 +181,7 @@
     };
     view.innerHTML = `
       <section>
-        <p class="lead">Preparazione all'esame di <b>Computer Networks and Network Security</b>: <b>26 punti</b> tra domande chiuse ed esercizi, <b>6 punti</b> da due domande aperte. Studi la teoria sugli appunti, ti alleni con quiz che ripropongono i tuoi errori, esercizi con valori sempre nuovi e risposte aperte da far correggere. Tutto è tarato sul formato d'esame.</p>
+        <p class="lead">Preparazione all'esame di <b>Computer Networks and Network Security</b>: <b>26 punti</b> tra domande chiuse ed esercizi, <b>6 punti</b> da due domande aperte. Studi la teoria sugli appunti, ti alleni con quiz che ripropongono i tuoi errori, esercizi con valori sempre nuovi e risposte aperte da autovalutare con la traccia. Tutto è tarato sul formato d'esame.</p>
         ${metaRow([["Teoria", `${NOTES.order.length} capitoli e lezioni`], ["Domande", `${ALLQ.length} chiuse (${EXAMQ.length} tipo esame) · ${Object.keys(OPENS).length} aperte`], ["Esercizi", `${Object.keys(EX).length} tipi, valori casuali`]])}
       </section>
       <section>
@@ -158,6 +192,7 @@
             <div class="row" style="margin-top:14px"><span>Chiuse, esercizi e 2 aperte · 32 punti</span><span class="mono">${ex ? `ultima: ${ex.total != null ? fmtP(ex.total) + "/32" : fmtP(ex.closed) + "/26"}` : "mai svolta"}</span></div></div></a>
         </div>
       </section>
+      ${readinessHtml()}
       <section>
         <h2 class="h2">Per oggi</h2>
         <div class="mods">
@@ -319,50 +354,15 @@
       <div class="qt">${esc(o.q)}</div>
       <textarea id="ans-${cfg.exam ? "x" : ""}${o.id}" placeholder="Scrivi la risposta come all'esame: definizione, meccanismo, esempio, limiti. 8–12 righe."></textarea>
       <div class="btns" style="justify-content:space-between"><span class="wc">0 parole</span>
-        <span class="btns">${cfg.exam && !cfg.graded ? "" : `<button class="btn sm" data-claude hidden>Correggi con Claude</button><button class="btn sm ghost" data-self>Autovaluta con la traccia</button>`}</span></div>
+        <span class="btns">${cfg.exam && !cfg.graded ? "" : `<button class="btn sm" data-self>Autovaluta con la traccia</button>`}</span></div>
       <div class="out"></div>`;
     const ta = $("textarea", el), wc = $(".wc", el), out = $(".out", el);
     ta.value = ls.get(draftKey) || "";
     const upd = () => { const n = (ta.value.trim().match(/\S+/g) || []).length; wc.textContent = `${n} parole`; };
     upd();
     ta.addEventListener("input", () => { upd(); ls.set(draftKey, ta.value); });
-    const cb = $("[data-claude]", el), sb = $("[data-self]", el);
+    const sb = $("[data-self]", el);
     const graded = (v, how) => { P.open[o.id] = { v, t: Date.now(), how }; save(); if (cfg.onGrade) cfg.onGrade(v); };
-    if (cb) {
-      cb.hidden = !sampleFn; sampleReady.then(() => { cb.hidden = !sampleFn; });
-      cb.onclick = async () => {
-        const txt = ta.value.trim();
-        if (txt.split(/\s+/).length < 15) { out.innerHTML = `<p class="note">Scrivi almeno qualche riga prima di chiedere la correzione.</p>`; return; }
-        cb.disabled = true; out.innerHTML = `<div class="grade"><span class="gl">Claude sta leggendo la tua risposta…</span></div>`;
-        const prompt = `Sei il docente di un corso universitario di reti di calcolatori e sicurezza informatica. Valuta la risposta di uno studente a una domanda aperta d'esame che vale 3 punti.
-
-Domanda: ${o.q}
-
-Punti chiave attesi:
-${o.punti.map((p) => "- " + p).join("\n")}
-
-Risposta dello studente:
-<<<
-${txt}
->>>
-
-Criteri: correttezza tecnica, copertura dei punti chiave, precisione dei termini, ordine dell'esposizione. Non premiare la lunghezza; penalizza le affermazioni sbagliate. Scrivi in italiano, in modo diretto.
-Rispondi solo con un oggetto JSON con questi campi:
-{"voto": numero da 0 a 3 a passi di 0.5, "coperti": [punti chiave trattati bene, frasi brevi], "mancanti": [punti chiave assenti o trattati male], "errori": [affermazioni sbagliate con la correzione], "consiglio": "una o due frasi su come migliorare"}`;
-        try {
-          const r = await sampleFn.json(prompt);
-          const v = Math.max(0, Math.min(3, Math.round(Number(r.voto) * 2) / 2 || 0));
-          const list = (t, arr) => (Array.isArray(arr) && arr.length ? `<div><div class="gl">${t}</div><ul>${arr.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "");
-          out.innerHTML = `<div class="grade"><div class="gl">Voto di Claude</div><div class="gv">${String(v).replace(".", ",")}<span class="muted" style="font-size:18px;font-weight:500"> / 3</span></div>
-            ${list("Punti coperti", r.coperti)}${list("Punti mancanti", r.mancanti)}${list("Errori", r.errori)}${r.consiglio ? `<div><div class="gl">Consiglio</div>${esc(r.consiglio)}</div>` : ""}</div>`;
-          graded(v, "claude");
-        } catch (e) {
-          const code = e && e.code;
-          if (code === "not_granted" || code === "sampling_disabled" || code === "not_declared" || code === "capability_disabled") { sampleFn = null; document.querySelectorAll("[data-claude]").forEach((b) => (b.hidden = true)); }
-          out.innerHTML = `<p class="note">${SAMPLE_ERR[code] || "La correzione non è riuscita. Riprova tra poco."}</p>`;
-        } finally { cb.disabled = false; }
-      };
-    }
     if (sb) sb.onclick = () => {
       out.innerHTML = `<div class="grade"><div class="gl">Traccia: spunta i punti che hai trattato correttamente</div>
         <div class="checklist">${o.punti.map((p, i) => `<label><input type="checkbox" data-i="${i}"><span>${esc(p)}</span></label>`).join("")}</div>
@@ -599,7 +599,7 @@ Rispondi solo con un oggetto JSON con questi campi:
         <h2 class="page-title">Risultato</h2>
         <div class="score-big"><span id="tot">${fmtP(rec.closed)}</span><span class="muted" style="font-size:.4em;letter-spacing:-0.03em"> / 32</span></div>
         ${metaRow([["Chiuse", `${quizPts} / ${nQ}`], gens.length ? ["Esercizi", `${fmtP(exPts)} / ${gens.length * 2}`] : ["Senza risposta", nQ - Object.keys(ans).length], ["Aperte", `<span id="openSc">da valutare</span> / 6`]])}
-        <p class="body-text">Valuta le due risposte aperte qui sotto (con Claude o con la traccia) per ottenere il totale.</p>
+        <p class="body-text">Autovaluta le due risposte aperte qui sotto con la traccia dei punti chiave per ottenere il totale.</p>
       </section>
       <section><h2 class="h2">Domande aperte</h2><div id="resOpen"></div></section>
       ${gens.length ? `<section><h2 class="h2">Esercizi</h2>${gens.map((g, i) => `<div class="exq"><div class="qn">Esercizio ${i + 1} · ${EX[exIds[i]].title} · ${fmtP(exRes[i].pts)}/2</div><div class="ex-body">${g.html}</div>
@@ -700,9 +700,9 @@ Rispondi solo con un oggetto JSON con questi campi:
           <div class="step"><span class="sn">00</span><div><h3>Teoria, una volta per capitolo</h3><p>Leggi gli appunti del capitolo nella sezione Teoria (20–40 minuti). Non sottolineare: alla fine di ogni sezione chiudi gli occhi e riassumi a voce i riquadri «da ricordare».</p></div></div>
           <div class="step"><span class="sn">01</span><div><h3>Scheda con le spiegazioni nascoste</h3><p>Attiva «Nascondi le spiegazioni»: leggi il termine, prova a dirlo a voce, poi tocca per controllare. Circa 15 minuti a modulo, dopo aver visto le slide almeno una volta.</p></div></div>
           <div class="step"><span class="sn">02</span><div><h3>Quiz da 10 domande</h3><p>Le domande nuove e quelle sbagliate escono per prime. Rileggi sempre la spiegazione, anche quando indovini. Obiettivo: padronanza di almeno 80% per modulo.</p></div></div>
-          <div class="step"><span class="sn">03</span><div><h3>Esercizi numerici</h3><p>Quelli segnati «esame» escono quasi sempre: blocco CIDR in 8 sottoreti, Dijkstra con TTL, ALOHA, backoff di Ethernet, CSMA/CD, segmenti TCP, grafico di Reno, DNS con cache, P2P, NAT, tunneling, indirizzi MAC/IP, firewall e iptables. Prova senza guardare la soluzione; i valori cambiano a ogni tentativo, quindi ripeti finché lo risolvi due volte di fila.</p></div></div>
+          <div class="step"><span class="sn">03</span><div><h3>Esercizi numerici</h3><p>Quelli segnati «esame» escono quasi sempre: blocco CIDR in 8 sottoreti, Dijkstra con TTL, ALOHA, backoff di Ethernet, CSMA/CD, segmenti TCP, grafico di Reno, DNS con cache, P2P, NAT, tunneling, indirizzi MAC/IP, tabelle del firewall e comandi iptables. Per la sicurezza ci sono anche catene di certificati, record TLS e cipher suite. Prova senza guardare la soluzione; i valori cambiano a ogni tentativo, quindi ripeti finché lo risolvi due volte di fila.</p></div></div>
           <div class="step"><span class="sn">04</span><div><h3>Ripasso degli errori, ogni giorno</h3><p>Apri Ripasso all'inizio di ogni sessione: prima gli errori in sospeso, poi un quiz misto. Una domanda esce dal ripasso solo dopo due risposte giuste consecutive.</p></div></div>
-          <div class="step"><span class="sn">05</span><div><h3>Domande aperte scritte a tempo</h3><p>10 minuti, 8–12 righe: definizione, meccanismo, esempio, limiti. Poi «Correggi con Claude» o l'autovalutazione con la traccia dei punti chiave.</p></div></div>
+          <div class="step"><span class="sn">05</span><div><h3>Domande aperte scritte a tempo</h3><p>10 minuti, 8–12 righe: definizione, meccanismo, esempio, limiti. Poi l'autovalutazione con la traccia dei punti chiave: spunta solo i punti che hai spiegato davvero.</p></div></div>
           <div class="step"><span class="sn">06</span><div><h3>Simulazioni complete</h3><p>Nel formato dell'esame: 18 chiuse, 4 esercizi, 2 aperte di sicurezza (una su firewall e regole). Una a settimana, due nelle ultime due settimane. Dopo ogni prova rifai subito le domande sbagliate.</p></div></div>
         </div>
       </section>

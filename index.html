@@ -110,6 +110,12 @@ section { display: grid; gap: 20px; }
 .h3 { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
 .lead { font-size: 17px; color: var(--muted); max-width: 62ch; }
 .body-text { color: var(--muted); max-width: 64ch; }
+.ready { display: grid; gap: 12px; }
+.ready-bar { position: relative; height: 10px; border-radius: 10px; background: var(--chip-2); margin-top: 6px; }
+.ready-bar i { display: block; height: 100%; border-radius: 10px; background: var(--fg); }
+.ready-bar .pass { position: absolute; top: -5px; bottom: -5px; width: 2px; margin-left: -1px; background: var(--exam); }
+.ready-scale { position: relative; display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 12px; color: var(--muted); letter-spacing: 0; }
+.gain { color: var(--fg); font-size: 13px; }
 .body-text b, .lead b { color: var(--fg); font-weight: 600; }
 
 /* Riga di metadati: etichetta sopra, valore sotto */
@@ -455,9 +461,12 @@ footer { margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line);
 <script src="data-reti.js"></script>
 <script src="data-sicurezza.js"></script>
 <script src="data-extra.js"></script>
+<script src="data-plus.js"></script>
 <script src="esercizi.js"></script>
 <script src="esercizi-extra.js"></script>
+<script src="esercizi-plus.js"></script>
 <script src="teoria.js"></script>
+<script src="teoria-plus.js"></script>
 <script src="app.js"></script>
 
 </html>
