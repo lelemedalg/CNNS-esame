@@ -1,0 +1,252 @@
+/* Contenuti: Reti.
+   Formato quiz: [domanda, [risposta corretta, distrattore, ...], spiegazione]
+   La prima opzione è sempre quella corretta: l'app mescola l'ordine. */
+window.STUDY = window.STUDY || { areas: {} };
+window.STUDY.areas.reti = {
+  id: "reti",
+  title: "Reti",
+  sub: "Capitoli 1–7",
+  modules: [
+    {
+      id: "r1", n: "1", title: "Reti di calcolatori e Internet", src: "appunti del corso",
+      scheda: [
+        ["Internet", "Rete di reti: host (end system) collegati da link e commutatori di pacchetto (router, switch). Protocolli: formato e ordine dei messaggi e azioni intraprese."],
+        ["Reti di accesso", "Cavo (HFC, mezzo condiviso, FDM), DSL (linea telefonica dedicata, asimmetrica), FTTH, reti domestiche e aziendali (Ethernet, Wi-Fi), accesso wireless (4G/5G)."],
+        ["Store-and-forward", "Il router deve ricevere l'intero pacchetto prima di ritrasmetterlo: L/R per link. Con N link e nessuna coda: d = N·L/R."],
+        ["Inoltro e instradamento", "Forwarding: azione locale, dall'ingresso all'uscita giusta (tabella). Routing: azione globale, calcolo dei percorsi (algoritmi)."],
+        ["Commutazione di circuito", "Risorse riservate end-to-end (FDM, TDM), prestazioni garantite, risorse inattive sprecate. Commutazione di pacchetto: condivisione statistica, più utenti, ma code e perdite."],
+        ["Quattro ritardi", "d_nodal = d_proc + d_queue + d_trans + d_prop. d_trans = L/R (dipende dalla lunghezza del pacchetto); d_prop = d/s (dipende dalla distanza; s ≈ 2·10^8 m/s)."],
+        ["Intensità di traffico", "La/R: ≈0 ritardo piccolo; →1 ritardo grande; >1 il ritardo cresce senza limite. Buffer pieno → perdita."],
+        ["Throughput", "Velocità di trasferimento end-to-end; vale il link collo di bottiglia: min(Rs, Rc). Con N flussi su un link condiviso R: min(Rs, Rc, R/N)."],
+        ["Struttura di Internet", "ISP di accesso, ISP regionali, ISP Tier-1, IXP, reti di content provider (Google): rete di reti."],
+        ["Sicurezza", "Packet sniffing, IP spoofing, DoS/DDoS (botnet). Difese: autenticazione, riservatezza, integrità, firewall, IDS."],
+        ["Pila protocollare", "Applicazione (messaggio), trasporto (segmento), rete (datagramma), collegamento (frame), fisico. Ogni livello offre un servizio a quello sopra."],
+        ["Incapsulamento", "Ogni livello aggiunge la sua intestazione: Ht + M = segmento, Hn + segmento = datagramma, Hl + datagramma = frame. Router: fino al livello 3; switch: fino al 2."]
+      ],
+      quiz: [
+        ["Il ritardo di trasmissione di un pacchetto di L bit su un link a R bps è:", ["L/R", "d/s", "R/L", "L·R"], "Dipende dalla lunghezza del pacchetto e dalla velocità del link, non dalla distanza."],
+        ["Il ritardo di propagazione dipende da:", ["Lunghezza del link e velocità di propagazione nel mezzo", "Lunghezza del pacchetto e velocità del link", "Numero di pacchetti in coda", "Velocità di elaborazione del router"], "d_prop = d/s, con s ≈ 2·10^8 m/s."],
+        ["Un pacchetto da 1000 byte su un link da 1 Mbps ha ritardo di trasmissione:", ["8 ms", "1 ms", "0,8 ms", "80 ms"], "8000 bit / 10^6 bps = 8 ms."],
+        ["Con store-and-forward, un pacchetto di L bit attraversa 3 link da R bps (propagazione trascurabile, nessuna coda). Il ritardo end-to-end è:", ["3L/R", "L/R", "L/(3R)", "L/R + 2 ms"], "Ogni router deve ricevere tutto il pacchetto prima di inoltrarlo."],
+        ["Se l'intensità di traffico La/R supera 1:", ["Il ritardo di accodamento cresce senza limite", "Il ritardo di accodamento è nullo", "Il ritardo di propagazione aumenta", "Il throughput raddoppia"], "Arrivano in media più bit di quanti il link possa servirne."],
+        ["Quale componente del ritardo nodale dipende dalla congestione?", ["Il ritardo di accodamento", "Il ritardo di trasmissione", "Il ritardo di propagazione", "Il ritardo di elaborazione"], "Varia da pacchetto a pacchetto."],
+        ["Server a Rs = 2 Mbps, client a Rc = 1 Mbps, rete centrale molto veloce. Throughput end-to-end:", ["1 Mbps", "2 Mbps", "3 Mbps", "0,67 Mbps"], "Vale il collo di bottiglia: min(Rs, Rc)."],
+        ["La differenza tra forwarding e routing è:", ["Il forwarding sposta un pacchetto dall'ingresso all'uscita del router; il routing calcola i percorsi end-to-end", "Il routing avviene nel singolo router, il forwarding in tutta la rete", "Sono sinonimi", "Il forwarding riguarda solo IPv6"], "Forwarding: locale. Routing: globale."],
+        ["Un vantaggio della commutazione di pacchetto rispetto a quella di circuito è:", ["Permette di servire più utenti grazie alla condivisione statistica", "Garantisce ritardi costanti", "Riserva banda per ogni chiamata", "Elimina le perdite"], "Ottima per traffico a raffiche; svantaggio: code e perdite."],
+        ["In TDM con 4 slot per frame su un link da 4 Mbps, ogni circuito ottiene:", ["1 Mbps", "4 Mbps", "16 Mbps", "0,25 Mbps"], "Ogni utente usa uno slot su quattro."],
+        ["In quale livello opera un router?", ["Rete (livello 3), con collegamento e fisico", "Applicazione", "Trasporto", "Solo fisico"], "Lo switch arriva al livello di collegamento."],
+        ["L'unità dati del livello di trasporto si chiama:", ["Segmento", "Frame", "Datagramma", "Messaggio"], "Messaggio (applicazione), segmento (trasporto), datagramma (rete), frame (collegamento)."],
+        ["Che cos'è l'incapsulamento?", ["Ogni livello aggiunge la propria intestazione ai dati del livello superiore", "La cifratura dei dati tra livelli", "La compressione dei pacchetti", "La divisione dei pacchetti in frammenti"], "Al ricevitore ogni livello toglie la sua intestazione."],
+        ["L'IP spoofing consiste nel:", ["Inviare pacchetti con un indirizzo sorgente falso", "Leggere i pacchetti in transito", "Sovraccaricare un server con traffico", "Sostituire un certificato"], "Lo sniffing è la lettura; il DoS è la saturazione."],
+        ["Un attacco DDoS tipicamente usa:", ["Una botnet di host compromessi che inondano il bersaglio", "Un singolo pacchetto malformato", "Un certificato falso", "Una password rubata"], "Viola la disponibilità."],
+        ["Perché la rete di accesso via cavo (HFC) è detta mezzo condiviso?", ["Le case di un quartiere condividono la rete fino alla centrale (headend)", "Ogni casa ha una linea dedicata", "Usa la linea telefonica", "Usa solo Wi-Fi"], "La DSL invece usa una linea dedicata fino al DSLAM."],
+        ["Un ISP Tier-1 è:", ["Un ISP globale al vertice della gerarchia, che non paga transito", "Un ISP di accesso residenziale", "Un IXP", "Una rete di content provider"], "Esempi storici: AT&T, Sprint, NTT."]
+      ],
+      aperte: [
+        { q: "Descrivi le quattro componenti del ritardo nodale, da cosa dipende ciascuna e il ruolo dell'intensità di traffico.", punti: ["Elaborazione: controllo errori, scelta dell'uscita (µs)", "Accodamento: attesa in coda, dipende dalla congestione", "Trasmissione L/R: lunghezza pacchetto e velocità link", "Propagazione d/s: distanza e mezzo", "Intensità La/R: vicino a 1 ritardi grandi, >1 illimitati", "Buffer finito → perdita"] },
+        { q: "Confronta commutazione di circuito e commutazione di pacchetto, con un esempio numerico.", punti: ["Circuito: risorse riservate (FDM/TDM), prestazioni garantite, spreco quando inattivo", "Pacchetto: store-and-forward, condivisione statistica, code e perdite", "Esempio: link 1 Mbps, utenti 100 kbps attivi il 10%: circuito 10 utenti, pacchetto 35 con P(>10 attivi) < 0,0004", "Pacchetto adatto al traffico a raffiche; servono controllo di congestione"] },
+        { q: "Perché le reti sono organizzate a livelli? Descrivi la pila Internet e l'incapsulamento.", punti: ["Modularità, ogni livello offre servizio al superiore", "Applicazione, trasporto, rete, collegamento, fisico con PDU", "Incapsulamento: header aggiunti in trasmissione, tolti in ricezione", "Router (livello 3) e switch (livello 2)", "Possibile svantaggio: duplicazione di funzioni"] }
+      ],
+      esercizi: ["onehop", "e2e", "qdelay", "caravan", "circuit", "psvscs", "throughput", "layers"]
+    },
+    {
+      id: "r2", n: "2", title: "Livello di applicazione", src: "appunti del corso",
+      scheda: [
+        ["Architetture", "Client-server: server sempre attivo con IP fisso, client non comunicano tra loro. P2P: peer intermittenti, auto-scalabile, gestione complessa."],
+        ["Processi e socket", "Il processo è identificato da IP + numero di porta (HTTP 80, HTTPS 443, SMTP 25, DNS 53). Il socket è la porta tra applicazione e trasporto."],
+        ["Servizi di trasporto", "TCP: affidabile, controllo di flusso e congestione, orientato alla connessione. UDP: inaffidabile, nessuna garanzia. Nessuno dei due offre throughput o ritardi garantiti né sicurezza (TLS sopra TCP)."],
+        ["HTTP", "Client-server su TCP porta 80, senza stato. Non persistente: un oggetto per connessione, 2 RTT + trasmissione per oggetto. Persistente (HTTP/1.1): connessione riusata, ~1 RTT per oggetto."],
+        ["Messaggi HTTP", "Richiesta: GET/POST/HEAD/PUT, Host, User-Agent, Connection. Risposta: 200 OK, 301 Moved Permanently, 400 Bad Request, 404 Not Found, 505 HTTP Version Not Supported."],
+        ["Cookie", "Set-cookie nella risposta, cookie nelle richieste successive, database sul server: mantengono stato (carrello, sessioni). Cookie di terze parti per il tracciamento; GDPR."],
+        ["Web cache", "Proxy che risponde al posto del server di origine: riduce tempi di risposta e traffico sul link d'accesso. GET condizionale: If-Modified-Since → 304 Not Modified."],
+        ["HTTP/2 e HTTP/3", "HTTP/2: frame, priorità, mitiga l'head-of-line blocking dentro una connessione TCP. HTTP/3: su QUIC (UDP), niente HOL tra stream, sicurezza integrata."],
+        ["Posta elettronica", "User agent, mail server, SMTP (TCP 25, push, persistente, 7-bit ASCII) tra server; accesso con IMAP o HTTP. Handshake, trasferimento, chiusura."],
+        ["DNS", "Database distribuito e gerarchico: root, TLD, autoritativi; server locale. Servizi: traduzione nomi, alias, alias di posta, bilanciamento. UDP porta 53."],
+        ["Risoluzione", "Iterativa: il server locale interroga root, TLD, autoritativo uno dopo l'altro. Ricorsiva: ogni server inoltra la query. Caching con TTL."],
+        ["Record DNS", "(nome, valore, tipo, TTL). A: nome→IP; NS: dominio→server autoritativo; CNAME: alias→nome canonico; MX: dominio→mail server."],
+        ["P2P vs client-server", "D_cs ≥ max(N·F/us, F/dmin). D_P2P ≥ max(F/us, F/dmin, N·F/(us + Σui)). Client-server cresce linearmente con N, P2P molto meno."],
+        ["Streaming e CDN", "DASH: video in chunk a più bitrate, manifest, il client sceglie. CDN: copie dei contenuti vicino agli utenti (enter deep / bring home); Netflix."],
+        ["Socket", "UDP: SOCK_DGRAM, nessuna connessione, il mittente indica indirizzo a ogni datagramma. TCP: SOCK_STREAM, il server ha un socket di benvenuto e crea un nuovo socket per ogni client (accept)."]
+      ],
+      quiz: [
+        ["HTTP è detto senza stato (stateless) perché:", ["Il server non conserva informazioni sulle richieste passate dei client", "Non usa TCP", "Non ha codici di stato", "Usa solo GET"], "Lo stato si gestisce con i cookie."],
+        ["Con HTTP non persistente, scaricare una pagina HTML con 10 immagini (connessioni seriali) richiede circa:", ["22 RTT più i tempi di trasmissione", "11 RTT più i tempi di trasmissione", "2 RTT", "12 RTT"], "2 RTT per ognuno degli 11 oggetti."],
+        ["Con HTTP persistente senza pipelining, la stessa pagina (1 HTML + 10 immagini) richiede circa:", ["12 RTT: 1 per la connessione, poi 1 per ogni oggetto", "22 RTT", "2 RTT", "11 RTT"], "La connessione TCP viene aperta una sola volta."],
+        ["Il codice di risposta 304 Not Modified indica che:", ["La copia in cache è aggiornata e l'oggetto non viene rinviato", "L'oggetto è stato spostato", "La richiesta è malformata", "Il server non supporta la versione HTTP"], "Risposta a un GET condizionale con If-Modified-Since."],
+        ["Quale intestazione rende condizionale un GET?", ["If-Modified-Since", "Set-Cookie", "Host", "Accept-Language"], "Usata da cache e browser."],
+        ["Una web cache istituzionale riduce:", ["Il tempo di risposta e il traffico sul link d'accesso", "Il numero di server DNS", "La lunghezza dei cookie", "La sicurezza delle connessioni"], "Spesso è più economica di un link d'accesso più veloce."],
+        ["Quale protocollo trasferisce la posta tra mail server?", ["SMTP", "IMAP", "POP3", "HTTP"], "IMAP e HTTP servono all'utente per leggere la posta."],
+        ["SMTP è un protocollo di tipo:", ["Push, su TCP porta 25, con connessioni persistenti", "Pull, su UDP porta 53", "Push, su UDP porta 25", "Pull, su TCP porta 80"], "HTTP invece è pull."],
+        ["Quale record DNS associa un dominio al suo mail server?", ["MX", "A", "NS", "CNAME"], "A: nome→IP; NS: server autoritativo; CNAME: alias."],
+        ["Un record CNAME associa:", ["Un alias al nome canonico", "Un nome a un indirizzo IPv4", "Un dominio al suo server autoritativo", "Un dominio al mail server"], "Esempio: www.ibm.com → servereast.backup2.ibm.com."],
+        ["In una risoluzione DNS iterativa:", ["Il server locale interroga in sequenza root, TLD e server autoritativo", "Ogni server inoltra la query al successivo", "Il client interroga direttamente il server autoritativo", "Il root server risponde sempre con l'IP finale"], "Nella ricorsiva il carico grava sui server superiori."],
+        ["Il DNS usa principalmente:", ["UDP sulla porta 53", "TCP sulla porta 80", "UDP sulla porta 25", "TCP sulla porta 443"], "TCP solo in casi particolari (risposte grandi, trasferimenti di zona)."],
+        ["Perché il DNS non è centralizzato?", ["Un singolo server sarebbe punto di guasto, collo di bottiglia, lontano e difficile da mantenere", "Perché UDP non lo permette", "Per motivi di privacy", "Perché i nomi sono troppo lunghi"], "Non scalerebbe."],
+        ["Nella distribuzione di un file a N peer, il tempo minimo con client-server:", ["Cresce linearmente con N", "È costante", "Cresce logaritmicamente con N", "Diminuisce con N"], "Il server deve caricare N copie: N·F/us. Nel P2P ogni peer contribuisce upload."],
+        ["In DASH, chi decide il bitrate del prossimo chunk?", ["Il client, in base alla banda disponibile", "Il server, in base al carico", "La CDN, in modo casuale", "Il DNS"], "Il manifest elenca le versioni disponibili."],
+        ["Una CDN che usa DNS per indirizzare l'utente:", ["Restituisce l'indirizzo di un server CDN vicino all'utente", "Copia i contenuti nel DNS", "Sostituisce HTTP", "Riduce la dimensione dei video"], "Strategie: enter deep (Akamai) e bring home (Limelight)."],
+        ["Un server TCP con 5 client connessi ha, tipicamente:", ["Un socket di benvenuto più 5 socket di connessione", "Un solo socket", "5 socket, senza socket di benvenuto", "10 socket"], "accept() crea un nuovo socket per ogni client."],
+        ["Quale servizio offre TCP ma non UDP?", ["Trasferimento affidabile e controllo di congestione", "Ritardo garantito", "Throughput minimo garantito", "Cifratura"], "Né TCP né UDP offrono garanzie temporali o cifratura (serve TLS)."],
+        ["HTTP/2 rispetto a HTTP/1.1:", ["Divide gli oggetti in frame e li interleava, mitigando l'head-of-line blocking", "Usa UDP al posto di TCP", "Elimina le intestazioni", "Non supporta la cache"], "HTTP/3 passa a QUIC su UDP."]
+      ],
+      aperte: [
+        { q: "Confronta HTTP persistente e non persistente, calcolando il tempo di risposta per una pagina con N oggetti referenziati.", punti: ["RTT: tempo di andata e ritorno di un piccolo pacchetto", "Non persistente: 2 RTT + trasmissione per oggetto; (N+1)·2 RTT seriale", "Connessioni parallele riducono il tempo", "Persistente: connessione riusata, ~1 RTT per oggetto dopo il primo", "Overhead del SO per ogni connessione TCP"] },
+        { q: "Descrivi la struttura gerarchica del DNS e la risoluzione di un nome in modo iterativo e ricorsivo. Che ruolo ha il caching?", punti: ["Root, TLD, autoritativi; server locale", "Iterativa: il locale contatta in sequenza root, TLD, autoritativo", "Ricorsiva: ogni server inoltra la richiesta", "Caching con TTL, anche dei server TLD", "Record A, NS, CNAME, MX; UDP 53"] },
+        { q: "Che cos'è una web cache e perché conviene? Spiega il GET condizionale.", punti: ["Proxy che serve oggetti al posto del server di origine", "Riduce tempo di risposta e utilizzo del link d'accesso", "Esempio: utilizzo link scende con il hit rate", "Alternativa più economica di un link più veloce", "GET condizionale con If-Modified-Since, risposta 304 Not Modified"] }
+      ],
+      esercizi: ["dnshttp", "p2p", "caching", "httpget"]
+    },
+    {
+      id: "r3", n: "3", title: "Livello di trasporto", src: "appunti del corso",
+      scheda: [
+        ["Servizi di trasporto", "Comunicazione logica tra processi (il livello di rete collega host). TCP e UDP; nessuno garantisce ritardo o banda."],
+        ["Multiplexing/demultiplexing", "UDP: socket identificato da (IP dest, porta dest) — segmenti da sorgenti diverse finiscono nello stesso socket. TCP: quadrupla (IP src, porta src, IP dest, porta dest) — un socket per connessione."],
+        ["UDP", "Header di 8 byte: porte sorgente e destinazione, lunghezza, checksum. Senza connessione né stato, nessun controllo di congestione. Usato da DNS, SNMP, HTTP/3, streaming."],
+        ["Checksum Internet", "Somma in complemento a uno delle parole di 16 bit, con riporto rientrante (wraparound), poi complemento. Protezione debole: errori che si compensano non vengono rilevati."],
+        ["rdt", "rdt1.0 canale affidabile; rdt2.0 errori sui bit (checksum, ACK/NAK, ritrasmissione); rdt2.1 numeri di sequenza 0/1 contro ACK/NAK corrotti; rdt2.2 senza NAK (ACK duplicato); rdt3.0 perdite (timer)."],
+        ["Stop-and-wait", "U = (L/R) / (RTT + L/R). Esempio 1 Gbps, 8000 bit, RTT 30 ms: U ≈ 0,00027. Con pipelining di N pacchetti: U = N·(L/R)/(RTT + L/R)."],
+        ["Go-Back-N", "Finestra N, ACK cumulativi, un timer per il pacchetto più vecchio: allo scadere ritrasmette tutti i non riscontrati. Il ricevitore scarta i fuori ordine."],
+        ["Selective Repeat", "ACK individuali, un timer per pacchetto, ritrasmette solo i persi; il ricevitore bufferizza i fuori ordine. Dilemma: serve finestra ≤ metà dello spazio dei numeri di sequenza."],
+        ["TCP", "Punto-punto, flusso di byte affidabile e ordinato, full duplex, MSS, pipelining, controllo di flusso e di congestione. Header 20 byte: porte, seq (primo byte), ACK (prossimo byte atteso, cumulativo), rwnd, flag."],
+        ["Timeout TCP", "EstimatedRTT = (1−α)·Est + α·Sample (α=0,125). DevRTT = (1−β)·Dev + β·|Sample − Est| (β=0,25). TimeoutInterval = EstimatedRTT + 4·DevRTT."],
+        ["Fast retransmit", "Tre ACK duplicati (quattro ACK uguali) → ritrasmissione del segmento con il numero di sequenza più basso, senza attendere il timeout."],
+        ["Controllo di flusso", "Il ricevitore pubblica rwnd (spazio libero nel buffer); il mittente limita i dati in volo a rwnd."],
+        ["Connessione", "Three-way handshake: SYN (seq x), SYNACK (seq y, ACK x+1), ACK (ACK y+1). Due vie non bastano (connessioni mezze aperte, duplicati). Chiusura con FIN e ACK."],
+        ["Congestione", "Costi: ritardi, ritrasmissioni inutili, lavoro sprecato a monte quando un pacchetto viene scartato. Approcci end-to-end (TCP) o assistiti dalla rete (ECN)."],
+        ["AIMD, slow start", "Slow start: cwnd parte da 1 MSS e raddoppia ogni RTT fino a ssthresh. Congestion avoidance: +1 MSS per RTT. Perdita: ssthresh = cwnd/2; timeout → cwnd = 1 MSS; 3 ACK dup (Reno) → cwnd = ssthresh + 3 (fast recovery). Tahoe: sempre 1 MSS."],
+        ["Throughput e varianti", "rate ≈ cwnd/RTT. Media ≈ 0,75·W/RTT. CUBIC (default Linux), BBR (delay-based), ECN. TCP è fair: K flussi condividono R/K. UDP e connessioni parallele aggirano l'equità."],
+        ["QUIC", "Su UDP, a livello applicativo: handshake che unisce connessione e sicurezza (1 RTT), più stream senza head-of-line blocking, controllo di errori e congestione. Base di HTTP/3."]
+      ],
+      quiz: [
+        ["Un socket UDP è identificato da:", ["Indirizzo IP e porta di destinazione", "La quadrupla IP e porte sorgente e destinazione", "La sola porta sorgente", "L'indirizzo MAC"], "Segmenti con sorgenti diverse ma stessa destinazione finiscono nello stesso socket."],
+        ["Un web server riceve connessioni TCP dalla stessa porta destinazione 80 da tre client diversi. Quanti socket di connessione usa?", ["Tre, uno per ciascuna quadrupla", "Uno, perché la porta di destinazione è la stessa", "Due", "Nessuno: usa il socket di benvenuto"], "Il demultiplexing TCP usa sorgente e destinazione."],
+        ["Quanto è lungo l'header UDP?", ["8 byte", "20 byte", "16 byte", "4 byte"], "Porte sorgente e destinazione, lunghezza, checksum: 4 campi da 16 bit."],
+        ["Nella checksum Internet, un riporto che esce dal bit più significativo:", ["Viene sommato al bit meno significativo (wraparound)", "Viene scartato", "Indica un errore", "Raddoppia il risultato"], "Somma in complemento a uno, poi si complementa."],
+        ["Che cosa aggiunge rdt2.1 rispetto a rdt2.0?", ["Un numero di sequenza (0/1) per gestire ACK/NAK corrotti", "Un timer per le perdite", "Una finestra di N pacchetti", "La checksum"], "Il ricevitore riconosce i duplicati."],
+        ["Che cosa aggiunge rdt3.0 rispetto a rdt2.2?", ["Un timer di ritrasmissione per gestire i pacchetti persi", "Il NAK", "I numeri di sequenza", "ACK cumulativi"], "Il canale può perdere pacchetti e ACK."],
+        ["Link 1 Gbps, pacchetti 8000 bit, RTT 30 ms. L'utilizzo del mittente stop-and-wait è circa:", ["0,00027", "0,27", "0,5", "0,027"], "U = 0,008 ms / 30,008 ms."],
+        ["Nel Go-Back-N, allo scadere del timer il mittente:", ["Ritrasmette tutti i pacchetti inviati e non ancora riscontrati", "Ritrasmette solo il pacchetto scaduto", "Riduce la finestra a 1", "Chiude la connessione"], "Il ricevitore scarta i pacchetti fuori ordine."],
+        ["Nel Selective Repeat, il ricevitore:", ["Bufferizza i pacchetti fuori ordine e invia ACK individuali", "Scarta i pacchetti fuori ordine", "Invia solo ACK cumulativi", "Non usa numeri di sequenza"], "La finestra deve essere ≤ metà dello spazio dei numeri di sequenza."],
+        ["In TCP, il numero di ACK indica:", ["Il numero di sequenza del prossimo byte atteso", "Il numero dell'ultimo segmento ricevuto", "Il numero di byte ricevuti in totale", "La dimensione della finestra"], "ACK cumulativo."],
+        ["Un segmento TCP ha seq = 92 e 8 byte di dati. L'ACK del ricevitore vale:", ["100", "92", "93", "8"], "92 + 8 = 100."],
+        ["Il TimeoutInterval di TCP si calcola come:", ["EstimatedRTT + 4·DevRTT", "2·EstimatedRTT", "SampleRTT + DevRTT", "EstimatedRTT / 4"], "Un margine di sicurezza grande quando la varianza è alta."],
+        ["Il fast retransmit di TCP scatta quando il mittente riceve:", ["Tre ACK duplicati", "Un ACK duplicato", "Un NAK", "Un timeout"], "Evita di attendere il timeout."],
+        ["Il campo rwnd dell'header TCP serve a:", ["Il controllo di flusso: indica lo spazio libero nel buffer del ricevitore", "Il controllo di congestione", "Calcolare il RTT", "Numerare i byte"], "Il mittente non ha in volo più di rwnd byte."],
+        ["Perché un handshake a due vie non basta per TCP?", ["Ritardi e ritrasmissioni possono creare connessioni mezze aperte o accettare dati duplicati vecchi", "Perché TCP è full duplex", "Perché serve scambiare le chiavi", "Perché UDP lo richiede"], "Il terzo messaggio conferma il numero di sequenza del server."],
+        ["Nel three-way handshake, il SYNACK del server contiene:", ["Il suo numero di sequenza y e ACK = x+1", "ACK = x e seq = x+1", "Solo il flag FIN", "I dati della prima richiesta"], "Il client risponde con ACK = y+1."],
+        ["In slow start, cwnd:", ["Raddoppia ogni RTT (cresce di 1 MSS per ogni ACK)", "Cresce di 1 MSS ogni RTT", "Resta costante", "Si dimezza a ogni ACK"], "Fino a raggiungere ssthresh."],
+        ["In TCP Reno, dopo tre ACK duplicati:", ["ssthresh = cwnd/2 e cwnd = ssthresh + 3 MSS (fast recovery)", "cwnd = 1 MSS e si torna in slow start", "cwnd raddoppia", "La connessione viene chiusa"], "Dopo un timeout cwnd = 1 MSS. TCP Tahoe va sempre a 1."],
+        ["Il comportamento AIMD di TCP significa:", ["Aumento additivo di 1 MSS per RTT, riduzione moltiplicativa (dimezzamento) alla perdita", "Aumento moltiplicativo, riduzione additiva", "Aumento e riduzione additivi", "Aumento esponenziale costante"], "Produce l'andamento a dente di sega."],
+        ["Il throughput di TCP con finestra cwnd è circa:", ["cwnd / RTT", "RTT / cwnd", "cwnd · RTT", "MSS / RTT²"], "In media ≈ 0,75·W/RTT."],
+        ["Che cos'è ECN?", ["Marcatura da parte dei router (bit nell'header IP) che segnala la congestione senza scartare", "Un nuovo algoritmo di slow start", "Un tipo di ACK duplicato", "Un'estensione di UDP"], "Il ricevitore la riporta con il bit ECE."],
+        ["Perché QUIC evita l'head-of-line blocking tra stream?", ["Gestisce affidabilità e ordine per ciascuno stream separatamente su UDP", "Usa più connessioni TCP", "Elimina le ritrasmissioni", "Usa pacchetti più grandi"], "Un pacchetto perso blocca solo il suo stream."],
+        ["Due connessioni TCP condividono un collo di bottiglia da R. In condizioni ideali ciascuna ottiene:", ["R/2", "R", "R/4", "Dipende solo dal RTT"], "Equità di TCP; in pratica il RTT incide."]
+      ],
+      aperte: [
+        { q: "Descrivi il controllo di congestione di TCP: slow start, congestion avoidance, reazione a timeout e a tre ACK duplicati.", punti: ["cwnd limita i byte in volo; rate ≈ cwnd/RTT", "Slow start: da 1 MSS, raddoppio ogni RTT fino a ssthresh", "Congestion avoidance: +1 MSS per RTT (AIMD)", "Timeout: ssthresh = cwnd/2, cwnd = 1 MSS", "3 ACK dup (Reno): ssthresh = cwnd/2, cwnd = ssthresh+3, fast recovery; Tahoe a 1", "Cenni a CUBIC, ECN, delay-based"] },
+        { q: "Confronta Go-Back-N e Selective Repeat: finestre, ACK, timer, comportamento in caso di perdita.", punti: ["Pipelining per aumentare l'utilizzo rispetto a stop-and-wait", "GBN: ACK cumulativi, un timer, ritrasmette tutta la finestra, ricevitore scarta fuori ordine", "SR: ACK individuali, timer per pacchetto, ritrasmette solo i persi, buffer al ricevitore", "Dilemma SR: finestra ≤ metà dei numeri di sequenza", "Utilizzo U = N·(L/R)/(RTT + L/R)"] },
+        { q: "Come stima TCP il timeout di ritrasmissione e come gestisce affidabilità e controllo di flusso?", punti: ["SampleRTT, EstimatedRTT con α=0,125 (EWMA)", "DevRTT con β=0,25; Timeout = Est + 4·Dev", "Numeri di sequenza sui byte, ACK cumulativi", "Fast retransmit con 3 ACK duplicati", "rwnd per il controllo di flusso"] }
+      ],
+      esercizi: ["checksum", "rtt", "cwnd", "seqack", "demux", "utilization", "gbn"]
+    },
+    {
+      id: "r4", n: "4", title: "Livello di rete: piano dei dati", src: "appunti del corso",
+      scheda: [
+        ["Piano dei dati e di controllo", "Dati: forwarding locale nel router. Controllo: routing di rete, per-router (algoritmi in ogni router) o SDN (controller remoto)."],
+        ["Servizio best-effort", "Nessuna garanzia di consegna, ordine, ritardo o banda; la sua semplicità ha favorito la diffusione di Internet."],
+        ["Architettura del router", "Porte d'ingresso (terminazione, lookup, accodamento), switching fabric, porte d'uscita, processore di routing."],
+        ["Longest prefix match", "Si usa la voce della tabella con il prefisso più lungo che corrisponde all'indirizzo. Implementato in hardware con TCAM."],
+        ["Switching fabric", "Via memoria (prima generazione), via bus (un pacchetto alla volta), interconnessione (crossbar, Clos), con parallelismo."],
+        ["Code", "In ingresso: blocco head-of-line (HOL) se il fabric è lento. In uscita: buffer quando arrivano più pacchetti del rate del link; perdite. Regola: buffer ≈ RTT·C/√N."],
+        ["Scheduling", "FIFO; priorità (classe più alta prima); round robin tra classi; WFQ (round robin pesato). Gestione del buffer: tail drop, priorità, RED/AQM."],
+        ["Datagramma IPv4", "Header 20 byte: versione, lunghezza header, TOS, lunghezza totale, identificatore, flag, offset, TTL, protocollo, checksum header, indirizzi sorgente e destinazione."],
+        ["Indirizzi e sottoreti", "32 bit per interfaccia. Sottorete: interfacce con la stessa parte di rete, raggiungibili senza router. CIDR a.b.c.d/x: x bit di prefisso."],
+        ["DHCP", "Discover (broadcast), Offer, Request, ACK su UDP (server 67, client 68). Fornisce IP, gateway, DNS, maschera."],
+        ["Aggregazione", "Un ISP pubblicizza un unico prefisso che copre i blocchi dei clienti; le route più specifiche vincono per il longest prefix match. ICANN assegna i blocchi."],
+        ["NAT", "Rete privata (10/8, 172.16/12, 192.168/16) dietro un solo IP pubblico. Il router riscrive (IP, porta) sorgente e tiene la tabella di traduzione. 16 bit di porta → ~60 000 connessioni. Controverso: viola l'end-to-end."],
+        ["IPv6", "Indirizzi di 128 bit, header fisso di 40 byte, flow label, niente frammentazione nei router, niente checksum. Transizione con tunneling: IPv6 dentro IPv4."],
+        ["Frammentazione IPv4", "MTU del link. Ogni frammento ha lo stesso ID, offset in unità di 8 byte, flag MF = 1 tranne l'ultimo; riassemblaggio a destinazione."],
+        ["Forwarding generalizzato", "Match + action (OpenFlow): match su campi di livello 2, 3, 4; azioni: inoltra, scarta, modifica, invia al controller; priorità e contatori. Unifica router, switch, firewall, NAT."],
+        ["Middlebox e principi", "Firewall, NAT, load balancer, cache. Clessidra IP. Argomento end-to-end: certe funzioni vanno negli host terminali."]
+      ],
+      quiz: [
+        ["Il servizio offerto dal livello di rete Internet è:", ["Best-effort, senza garanzie di consegna, ordine o ritardo", "Affidabile e ordinato", "A banda garantita", "Orientato alla connessione"], "Le garanzie le aggiungono i livelli superiori."],
+        ["Con il longest prefix match, l'indirizzo viene inoltrato secondo:", ["La voce con il prefisso più lungo che corrisponde", "La prima voce della tabella", "La voce con il prefisso più corto", "La voce con costo minimo"], "Permette route più specifiche delle aggregate."],
+        ["Il blocco head-of-line (HOL) si verifica:", ["Nelle code di ingresso, quando il pacchetto in testa blocca quelli dietro destinati ad altre uscite", "Nelle code di uscita quando il buffer è pieno", "Quando il TTL vale zero", "Quando DHCP non risponde"], "Il fabric può inoltrare un solo pacchetto verso una certa uscita alla volta."],
+        ["Nello scheduling WFQ:", ["Ogni classe riceve una quota di banda proporzionale al suo peso", "Si serve sempre la classe con priorità più alta", "Si serve in ordine di arrivo", "Si scartano i pacchetti più vecchi"], "È un round robin generalizzato e pesato."],
+        ["Quanti indirizzi contiene il blocco 200.23.16.0/23?", ["512", "256", "1024", "23"], "32−23 = 9 bit per gli host: 2^9 = 512."],
+        ["L'indirizzo 223.1.1.4/24 appartiene alla sottorete:", ["223.1.1.0/24", "223.1.0.0/24", "223.0.0.0/24", "223.1.1.4/32"], "I primi 24 bit sono la parte di rete."],
+        ["DHCP usa come trasporto:", ["UDP (server porta 67, client 68)", "TCP porta 80", "ICMP", "Solo IP, senza trasporto"], "Discover e Request vengono inviati in broadcast."],
+        ["L'ordine dei messaggi DHCP è:", ["Discover, Offer, Request, ACK", "Request, Offer, Discover, ACK", "Offer, Discover, ACK, Request", "Discover, ACK, Offer, Request"], "Spesso Discover/Offer si possono saltare se il client ricorda l'indirizzo."],
+        ["Quale prefisso NON è un indirizzo privato?", ["172.32.0.0/16", "10.0.0.0/8", "192.168.0.0/16", "172.16.0.0/12"], "172.16/12 copre 172.16.0.0–172.31.255.255."],
+        ["Un router NAT, per un pacchetto in uscita, sostituisce:", ["IP e porta sorgente con il proprio IP pubblico e una nuova porta", "IP e porta di destinazione", "Solo il TTL", "L'indirizzo MAC di destinazione"], "Registra la corrispondenza nella tabella NAT per tradurre le risposte."],
+        ["Perché il NAT è considerato controverso?", ["Viola l'argomento end-to-end: i router dovrebbero arrivare solo al livello 3", "Rende più lenti i DNS", "Impedisce l'uso di TCP", "Non funziona con IPv4"], "Inoltre complica le connessioni in ingresso (NAT traversal)."],
+        ["Quale campo è stato rimosso dall'header IPv6 rispetto a IPv4?", ["La checksum dell'header", "L'indirizzo di destinazione", "Il TTL (hop limit)", "La versione"], "Rimossi anche frammentazione nei router e opzioni nell'header base."],
+        ["Quanto è lungo un indirizzo IPv6?", ["128 bit", "64 bit", "32 bit", "48 bit"], "L'header base IPv6 è fisso di 40 byte."],
+        ["Il tunneling IPv6-in-IPv4 consiste nel:", ["Trasportare il datagramma IPv6 come payload di un datagramma IPv4 tra router IPv4", "Tradurre gli indirizzi IPv6 in IPv4", "Cifrare il traffico IPv6", "Dividere gli indirizzi in due parti"], "Serve durante la transizione, perché non tutti i router si aggiornano insieme."],
+        ["Un datagramma di 4000 byte (header 20) attraversa un link con MTU 1500. Quanti frammenti?", ["3", "2", "4", "1"], "3980 byte di dati: 1480 + 1480 + 1020."],
+        ["L'offset di frammentazione IPv4 è espresso in unità di:", ["8 byte", "1 byte", "4 byte", "16 byte"], "Il secondo frammento dell'esempio ha offset 1480/8 = 185."],
+        ["Nel forwarding generalizzato (OpenFlow), una regola è composta da:", ["Match su campi dell'header, azioni, priorità e contatori", "Solo prefisso di destinazione e interfaccia", "Indirizzo MAC e porta", "Un certificato e una chiave"], "Azioni: inoltra, scarta, modifica, invia al controller."],
+        ["Quale dispositivo può essere modellato da regole match+action?", ["Router, switch, firewall e NAT", "Solo i router", "Solo i firewall", "Solo i server DNS"], "OpenFlow unifica diversi tipi di dispositivi."],
+        ["L'argomento end-to-end afferma che:", ["Funzioni come affidabilità e sicurezza possono essere realizzate completamente solo negli host terminali", "Tutte le funzioni vanno nel nucleo della rete", "I router devono garantire la consegna", "Ogni pacchetto va riscontrato hop per hop"], "Il nucleo può offrirle solo come ottimizzazione."]
+      ],
+      aperte: [
+        { q: "Descrivi l'architettura di un router: porte d'ingresso, switching fabric, porte d'uscita, e dove e perché si formano code.", punti: ["Porte d'ingresso: fisico, collegamento, lookup (longest prefix match)", "Fabric: memoria, bus, interconnessione", "Code d'ingresso e HOL blocking se il fabric è lento", "Code d'uscita: arrivi superiori al rate del link, perdite", "Scheduling: FIFO, priorità, RR, WFQ", "Gestione buffer: drop, AQM"] },
+        { q: "Spiega indirizzamento IPv4 con CIDR, DHCP e NAT, con un esempio.", punti: ["Indirizzi di 32 bit per interfaccia, sottorete senza router", "CIDR a.b.c.d/x, aggregazione delle route", "DHCP: discover, offer, request, ack; anche gateway, DNS, maschera", "NAT: indirizzi privati, tabella di traduzione (IP, porta)", "Limiti e critiche del NAT"] },
+        { q: "Che cos'è il forwarding generalizzato? Descrivi le tabelle OpenFlow con esempi.", punti: ["Match + action rispetto al solo inoltro per destinazione", "Campi di livello 2, 3, 4", "Azioni: forward, drop, modify, al controller", "Priorità e contatori", "Esempi: router, switch, firewall, NAT", "Collegamento con SDN (cap. 5)"] }
+      ],
+      esercizi: ["lpm", "subnet", "subnetsplit", "nat", "sched", "frag"]
+    },
+    {
+      id: "r5", n: "5", title: "Livello di rete: piano di controllo", src: "appunti del corso",
+      scheda: [
+        ["Due approcci", "Controllo per router (ogni router esegue l'algoritmo e scambia messaggi) o logicamente centralizzato (SDN: un controller calcola e installa le tabelle)."],
+        ["Classificazione", "Globale (link state, conosce tutta la topologia) o decentralizzato (distance vector). Statico o dinamico."],
+        ["Dijkstra (link state)", "Ogni nodo conosce la topologia (broadcast dei link state) e calcola i cammini minimi. Complessità O(n²), O(n log n) con heap; O(n²) messaggi. Possibili oscillazioni con costi dipendenti dal carico."],
+        ["Bellman-Ford", "D_x(y) = min_v { c(x,v) + D_v(y) }. Ogni nodo invia il proprio vettore ai vicini; iterativo, asincrono, distribuito, auto-terminante."],
+        ["Distance vector: cambi di costo", "Le buone notizie viaggiano veloci, le cattive lente: count-to-infinity. Poisoned reverse aiuta solo in parte."],
+        ["LS vs DV", "LS: O(n·E) messaggi, convergenza O(n²), ogni nodo calcola la propria tabella (più robusto). DV: messaggi tra vicini, convergenza variabile, un errore si propaga."],
+        ["Sistemi autonomi", "Routing gerarchico per scala e autonomia amministrativa. Intra-AS (stesso protocollo nell'AS, gateway ai bordi) e inter-AS (BGP)."],
+        ["OSPF", "Link state, ogni router conosce la topologia completa, Dijkstra. Messaggi autenticati; gerarchia a due livelli: aree e backbone. Metriche configurabili."],
+        ["BGP", "Protocollo inter-dominio de facto. eBGP tra AS, iBGP dentro l'AS. Path vector su sessioni TCP. Messaggi OPEN, UPDATE, KEEPALIVE, NOTIFICATION."],
+        ["Attributi BGP", "Rotta = prefisso + attributi. AS-PATH (lista di AS, evita i cicli), NEXT-HOP (router che inizia il percorso). Policy di import/export."],
+        ["Scelta della rotta BGP", "1) preferenza locale (policy), 2) AS-PATH più corto, 3) NEXT-HOP più vicino (hot potato), 4) altri criteri."],
+        ["Hot potato e policy", "Hot potato: si esce dall'AS dal gateway più vicino, ignorando il costo fuori. Policy: un ISP non pubblicizza rotte che farebbero transitare traffico tra due suoi provider."],
+        ["Perché intra e inter diversi", "Policy (inter: controllo amministrativo; intra: un'unica amministrazione), scala, prestazioni (intra può puntare alle prestazioni)."],
+        ["SDN", "Forwarding generalizzato, separazione tra piano dati e controllo, controller logicamente centralizzato, applicazioni programmabili. Traffic engineering più semplice. OpenFlow tra controller e switch; ODL, ONOS."],
+        ["ICMP", "Messaggi di errore ed eco (tipo, codice), dentro datagrammi IP. Traceroute: UDP con TTL crescente; risposte ICMP TTL expired (tipo 11), alla fine port unreachable (tipo 3 codice 3)."],
+        ["Gestione di rete", "SNMP: get, set, trap tra manager e agent, MIB. NETCONF: RPC su sessione sicura, configurazione a livello di rete, dati modellati in YANG."]
+      ],
+      quiz: [
+        ["L'algoritmo di Dijkstra è un algoritmo di routing:", ["Globale (link state): ogni nodo conosce tutta la topologia", "Decentralizzato (distance vector)", "Solo inter-AS", "Basato su policy"], "Usato da OSPF."],
+        ["La complessità dell'algoritmo di Dijkstra con n nodi (implementazione semplice) è:", ["O(n²)", "O(n)", "O(log n)", "O(2^n)"], "O(n log n) con strutture dati più efficienti."],
+        ["L'equazione di Bellman-Ford è:", ["D_x(y) = min_v { c(x,v) + D_v(y) }", "D_x(y) = max_v { c(x,v) + D_v(y) }", "D_x(y) = c(x,y)", "D_x(y) = Σ_v c(x,v)"], "Il minimo è preso sui vicini v di x."],
+        ["Nel distance vector, il problema del count-to-infinity si verifica quando:", ["Il costo di un link aumenta (le cattive notizie viaggiano lente)", "Il costo di un link diminuisce", "Un nuovo nodo si aggiunge", "Si usa Dijkstra"], "Due nodi si rimandano a vicenda costi sempre crescenti."],
+        ["Il poisoned reverse consiste nel:", ["Annunciare costo infinito al vicino attraverso cui si instrada verso quella destinazione", "Cifrare i vettori delle distanze", "Ignorare gli aggiornamenti dei vicini", "Usare Dijkstra in caso di guasto"], "Risolve i cicli tra due nodi ma non quelli più lunghi."],
+        ["Quale affermazione su LS e DV è corretta?", ["Nel LS ogni nodo calcola la propria tabella, quindi un errore resta più localizzato", "Nel DV ogni nodo conosce tutta la topologia", "Il LS non invia messaggi", "Il DV converge sempre più velocemente"], "Nel DV un nodo che pubblicizza costi errati li propaga a tutta la rete."],
+        ["OSPF è:", ["Un protocollo intra-AS link state, con Dijkstra", "Un protocollo inter-AS path vector", "Un protocollo distance vector", "Un protocollo di gestione"], "Supporta aree gerarchiche e messaggi autenticati."],
+        ["In OSPF gerarchico, il traffico tra due aree passa:", ["Per il backbone, tramite gli area border router", "Direttamente tra le aree", "Attraverso BGP", "Attraverso il DNS"], "Ogni area conosce la propria topologia in dettaglio."],
+        ["BGP trasporta i messaggi su:", ["Connessioni TCP semi-permanenti", "UDP", "ICMP", "Datagrammi IP senza trasporto"], "Porta 179."],
+        ["A cosa serve l'attributo AS-PATH in BGP?", ["Elencare gli AS attraversati, per rilevare cicli e preferire percorsi più corti", "Indicare il router di uscita", "Autenticare le rotte", "Indicare la preferenza locale"], "Un router rifiuta un annuncio che contiene già il proprio AS."],
+        ["NEXT-HOP in BGP è:", ["L'indirizzo dell'interfaccia del router che inizia l'AS-PATH", "Il prossimo AS nell'elenco", "Il router più vicino all'origine", "Il server DNS dell'AS"], "Serve al router per sapere dove inoltrare."],
+        ["Quale messaggio BGP annuncia o ritira una rotta?", ["UPDATE", "OPEN", "KEEPALIVE", "NOTIFICATION"], "OPEN apre la sessione; KEEPALIVE la mantiene; NOTIFICATION segnala errori."],
+        ["Il primo criterio nella scelta della rotta BGP è:", ["La preferenza locale, decisa dalla policy", "L'AS-PATH più corto", "Il NEXT-HOP più vicino", "L'indirizzo IP più basso"], "Poi AS-PATH più corto, poi hot potato."],
+        ["L'instradamento hot potato consiste nel:", ["Scegliere il gateway d'uscita con il minor costo intra-AS, ignorando il costo fuori dall'AS", "Scegliere il percorso con meno AS", "Distribuire il traffico su tutti i gateway", "Scartare i pacchetti in caso di congestione"], "Il pacchetto lascia l'AS il prima possibile."],
+        ["Perché un ISP non pubblicizza ai propri provider le rotte apprese dagli altri provider?", ["Per non trasportare traffico di transito tra provider senza esserne pagato", "Perché BGP lo vieta", "Per ridurre l'AS-PATH", "Per evitare cicli"], "È un esempio di policy tramite annunci."],
+        ["Perché si usano protocolli diversi per l'instradamento intra-AS e inter-AS?", ["Inter-AS conta la policy, intra-AS le prestazioni; servono anche scalabilità e autonomia", "Perché BGP non funziona dentro un AS", "Perché OSPF non supporta IPv4", "Per motivi di sicurezza crittografica"], "Un'unica amministrazione dentro l'AS non richiede policy."],
+        ["In SDN, il controller comunica con gli switch tramite:", ["Un protocollo come OpenFlow (interfaccia southbound)", "BGP", "DNS", "SNMP trap soltanto"], "Le applicazioni di rete usano l'interfaccia northbound."],
+        ["Un vantaggio di SDN è:", ["Traffic engineering più semplice grazie a un controllo logicamente centralizzato e programmabile", "Eliminare la necessità di switch", "Non richiedere tabelle di flusso", "Usare solo routing statico"], "Con il routing tradizionale serve ritoccare i pesi dei link."],
+        ["Traceroute usa:", ["Pacchetti con TTL crescente; i router rispondono con ICMP TTL expired", "Solo richieste DNS", "Pacchetti TCP SYN con TTL fisso", "Messaggi BGP UPDATE"], "La destinazione risponde con ICMP port unreachable."],
+        ["Il messaggio ICMP di tipo 11 codice 0 indica:", ["TTL scaduto", "Echo reply", "Destinazione irraggiungibile", "Echo request"], "Tipo 0: echo reply; tipo 8: echo request; tipo 3: destination unreachable."],
+        ["In SNMP, il messaggio che l'agente invia spontaneamente al manager è:", ["Trap", "GetRequest", "SetRequest", "GetBulkRequest"], "Gli altri sono richieste dal manager."],
+        ["NETCONF si distingue da SNMP perché:", ["Configura attivamente i dispositivi a livello di rete con RPC su sessione sicura, dati descritti in YANG", "Usa solo UDP", "Serve solo a leggere contatori", "Sostituisce BGP"], "Supporta operazioni come edit-config, commit, lock."]
+      ],
+      aperte: [
+        { q: "Descrivi l'algoritmo di Dijkstra e quello distance vector, confrontandoli per complessità dei messaggi, velocità di convergenza e robustezza.", punti: ["LS: topologia nota a tutti, Dijkstra, insieme N', aggiornamento D(v)", "Complessità O(n²), oscillazioni con costi dipendenti dal traffico", "DV: Bellman-Ford, vettori ai vicini, iterativo e asincrono", "Count-to-infinity, poisoned reverse", "Confronto: messaggi, convergenza, robustezza"] },
+        { q: "Spiega come funziona BGP: eBGP/iBGP, attributi, scelta della rotta e policy.", punti: ["Inter-AS, path vector, sessioni TCP", "eBGP tra AS, iBGP per diffondere dentro l'AS", "Attributi AS-PATH e NEXT-HOP", "Selezione: local pref, AS-PATH più corto, hot potato, altro", "Policy di import/export, niente transito gratuito tra provider", "Perché diverso dal routing intra-AS"] },
+        { q: "Che cos'è SDN? Descrivi componenti, ruolo di OpenFlow e vantaggi rispetto al controllo per router.", punti: ["Separazione piano dati / piano di controllo", "Controller logicamente centralizzato, applicazioni di rete", "Switch con tabelle di flusso (match+action)", "OpenFlow: messaggi controller→switch e switch→controller", "Vantaggi: traffic engineering, programmabilità", "Sfide: affidabilità e scalabilità del controller"] }
+      ],
+      esercizi: ["dijkstra", "dv"]
+    }
+  ]
+};
